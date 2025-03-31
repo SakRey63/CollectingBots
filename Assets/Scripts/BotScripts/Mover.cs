@@ -8,7 +8,7 @@ public class Mover : MonoBehaviour
     [SerializeField] private float _moveSpeed;
     [SerializeField] private float _delayDriveBack;
     
-    private Transform _lockAtTarget;
+    private Vector3 _lockAtTarget;
     private Vector3 _direction;
     
     private bool _isMovingForward;
@@ -31,25 +31,20 @@ public class Mover : MonoBehaviour
         yield return delay;
 
         _isMovingBack = false;
+
+        _isMovingForward = true; 
         
         DeliveredResource?.Invoke();
     }
 
-    public void ChangeDirection(Transform target)
+    public void ChangeDirection(Vector3 target)
     {
         _lockAtTarget = target;
     }
     
-    public void ChangeSpeed()
+    public void ChangeSpeed(bool isMoving)
     {
-        if (_isMovingForward)
-        {
-            _isMovingForward = false;
-        }
-        else
-        {
-            _isMovingForward = true;
-        }
+        _isMovingForward = isMoving;
     }
 
     public void ChangeMoving()
@@ -61,7 +56,7 @@ public class Mover : MonoBehaviour
     {
         if (_lockAtTarget != null && _isMovingForward)
         {
-            _direction = _lockAtTarget.position - transform.position;
+            _direction = _lockAtTarget - transform.position;
             
             transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(_direction), _rotationSpeed * Time.deltaTime);
         }

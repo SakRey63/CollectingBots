@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -10,27 +9,12 @@ public class SpawnerResources : Spawner<Resource>
     [SerializeField] private float _maxPositionX;
     [SerializeField] private float _maxPositionZ;
     [SerializeField] private float _positionY;
-    [SerializeField] private float _delay;
+
+    private Transform _transformSpawn;
 
     private Vector3 _positionSpawn;
+    private Quaternion _quaternionSpawn = Quaternion.Euler(Vector3.zero);
     private int _index;
-
-    private void Start()
-    {
-        StartCoroutine(RepeatResource());
-    }
-
-    private IEnumerator RepeatResource()
-    {
-        WaitForSeconds delay = new WaitForSeconds(_delay);
-
-        while (enabled)
-        {
-            GetGameObject();
-
-            yield return delay;
-        }
-    }
 
     protected override Resource ChoosePrefab()
     {
@@ -46,10 +30,19 @@ public class SpawnerResources : Spawner<Resource>
         SetRandomPosition();
         
         resource.Delivered += ReleaseResource;
+        
         resource.transform.position = _positionSpawn;
+        resource.transform.rotation = _quaternionSpawn;
         resource.SetIndex(_index);
         
         base.SetAction(resource);
+    }
+
+    public void SetAreaResource(Transform position)
+    {
+        _transformSpawn = position;
+        
+        GetGameObject();
     }
 
     private void ReleaseResource(Resource resource)
@@ -61,7 +54,7 @@ public class SpawnerResources : Spawner<Resource>
 
     private void SetRandomPosition()
     {
-        _positionSpawn = new Vector3(Random.Range(_minPositionX, _maxPositionX), _positionY,
-            Random.Range(_minPositionZ, _maxPositionZ));
+        _positionSpawn = new Vector3(Random.Range(_transformSpawn.position.x + _minPositionX, _transformSpawn.position.x + _maxPositionX), _positionY,
+                        Random.Range(_transformSpawn.position.z + _minPositionZ, _transformSpawn.position.z + _maxPositionZ));
     }
 }

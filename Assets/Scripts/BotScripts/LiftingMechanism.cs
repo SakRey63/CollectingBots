@@ -7,7 +7,10 @@ public class LiftingMechanism : MonoBehaviour
     [SerializeField] private Animator _animator;
     [SerializeField] private float _delay;
 
-    private bool _isRaise;
+    private bool _isUploaded;
+    private Resource _resource;
+
+    public bool IsUploaded => _isUploaded;
 
     public event Action AscentFinished;
     public event Action Unloaded;
@@ -16,23 +19,39 @@ public class LiftingMechanism : MonoBehaviour
     {
         WaitForSeconds delay = new WaitForSeconds(_delay);
         
-        _animator.SetBool(AnimatorData.Params.Raise, _isRaise);
+        _animator.SetBool(AnimatorData.Params.Raise, _isUploaded);
 
         yield return delay;
 
-        if (_isRaise)
+        if (_isUploaded)
         {
+            _resource.transform.parent = transform;
+            
             AscentFinished?.Invoke();
         }
         else
         {
+            _resource.transform.parent = null;
+
+            _resource = null;
+            
             Unloaded?.Invoke();
         }
     }
 
-    public void ChangeElevator(bool isRaise)
+    public void TransferResource(Stockroom stockroom)
     {
-        _isRaise = isRaise;
+        stockroom.TransferResource(_resource);
+    }
+
+    public void ChangeElevator(Resource resource)
+    {
+        if (_resource == null)
+        {
+            _resource = resource;
+        }
+
+        _isUploaded = !_isUploaded;
         
         StartCoroutine(WorkingElevator());
     }

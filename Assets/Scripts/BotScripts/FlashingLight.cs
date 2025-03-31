@@ -16,7 +16,7 @@ public class FlashingLight : MonoBehaviour
         }
         else
         {
-            if (uploaded)
+            if (uploaded == false)
             {
                 InstallEffect(_effectFollowing);
             }

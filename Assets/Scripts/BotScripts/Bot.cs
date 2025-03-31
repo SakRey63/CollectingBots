@@ -4,23 +4,16 @@ using UnityEngine;
 public class Bot : MonoBehaviour
 {
     [SerializeField] private BotScanner _botScanner;
+    [SerializeField] private DirectionMovingBot _directionMoving;
     [SerializeField] private Mover _mover;
     [SerializeField] private LiftingMechanism _liftingMechanism;
     [SerializeField] private FlashingLight _flashingLight;
-    [SerializeField] private Transform _waitingPoint;
-    [SerializeField] private Transform _waitingCheackPoint;
-    [SerializeField] private Transform _stockroom;
-    [SerializeField] private Transform _stockroomCheackPoint;
     
     private bool _isReleased = true;
-    private bool _uploaded = true;
-    private bool _isReturningToBase;
-    private bool _isMovingToWarehouse;
+    private bool _isMoving;
     private Resource _resource;
-
-    public Resource Resource => _resource;
+    
     public bool IsReleased => _isReleased;
-    public bool Uploaded => _uploaded;
 
     public event Action<Bot> Released;
 
@@ -28,128 +21,104 @@ public class Bot : MonoBehaviour
     {
         _botScanner.AchievedCheckPoint += ChooseDirection;
         _botScanner.AchievedResource += RaisingResource;
+        _botScanner.AchievedStockroom += UnloadingResource;
         _botScanner.AchievedWaitingPoint += ChangeStatus;
-        _liftingMechanism.AscentFinished += ChooseDirection;
-        _liftingMechanism.Unloaded += GoBack;
-        _mover.DeliveredResource += ChooseDirection;
+        _liftingMechanism.AscentFinished += DeliveringResource;
+        _liftingMechanism.Unloaded += DriveBack;
     }
 
     private void OnDisable()
     {
         _botScanner.AchievedCheckPoint -= ChooseDirection;
         _botScanner.AchievedResource -= RaisingResource;
+        _botScanner.AchievedStockroom -= UnloadingResource;
         _botScanner.AchievedWaitingPoint -= ChangeStatus;
-        _liftingMechanism.AscentFinished -= ChooseDirection;
-        _liftingMechanism.Unloaded -= GoBack;
-        _mover.DeliveredResource -= ChooseDirection;
+        _liftingMechanism.AscentFinished -= DeliveringResource;
+        _liftingMechanism.Unloaded -= DriveBack;
     }
 
     private void Start()
     {
-        _flashingLight.ChangeEffect(_isReleased, _uploaded);
-    }
-
-    public void ReturnToBase()
-    {
-        _resource = null;
-        
-        _isReturningToBase = true;
-        
-        _mover.ChangeDirection(_waitingPoint);
-        
-        _flashingLight.ChangeEffect(_isReleased, _uploaded);
+        _flashingLight.ChangeEffect(_isReleased, _liftingMechanism.IsUploaded);
     }
 
     public void SetTarget(Resource resource)
     {
+        _resource = resource;
+        
         _isReleased = false;
 
-        _resource = resource;
-
-        _isReturningToBase = false;
+        _isMoving = true;
         
-        _mover.ChangeDirection(_waitingCheackPoint);
-        _mover.ChangeSpeed();
+        _directionMoving.SetDirectionTarget(_resource.transform, _liftingMechanism.IsUploaded);
         
-        _flashingLight.ChangeEffect(_isReleased, _uploaded);
+        _mover.ChangeSpeed(_isMoving);
+        
+        _flashingLight.ChangeEffect(_isReleased, _liftingMechanism.IsUploaded);
     }
 
     private void ChangeStatus()
     {
         if (_isReleased == false)
         {
-            _mover.ChangeSpeed();
-                    
+            _resource = null;
+            
             _isReleased = true;
+
+            _isMoving = false;
+            
+            _mover.ChangeSpeed(_isMoving);
                     
             Released?.Invoke(this);
             
-            _flashingLight.ChangeEffect(_isReleased, _uploaded);
+            _flashingLight.ChangeEffect(_isReleased, _liftingMechanism.IsUploaded);
         }
     }
 
-    private void RaisingResource()
+    private void DriveBack()
     {
-        _mover.ChangeSpeed();
+        _directionMoving.GoBack();
+    }
+
+    private void UnloadingResource(Stockroom stockroom)
+    {
+        _isMoving = false;
         
-        if (_isMovingToWarehouse == false)
+        _mover.ChangeSpeed(_isMoving);
+        
+        _liftingMechanism.ChangeElevator(_resource);
+        _liftingMechanism.TransferResource(stockroom);
+        
+        ChooseDirection();
+        
+        _flashingLight.ChangeEffect(_isReleased, _liftingMechanism.IsUploaded);
+    }
+
+    private void DeliveringResource()
+    {
+        _isMoving = true;
+        
+        _mover.ChangeSpeed(_isMoving);
+    }
+
+    private void RaisingResource(Resource resource)
+    {
+        _isMoving = false;
+        
+        _mover.ChangeSpeed(_isMoving);
+
+        if (_resource.Index == resource.Index)
         {
-            _liftingMechanism.ChangeElevator(_uploaded);
-                
-            _resource.transform.parent = null;
-                
-            _uploaded = true;
+            _liftingMechanism.ChangeElevator(resource);
         }
-        else
-        {
-            _liftingMechanism.ChangeElevator(_uploaded);
-            
-            _resource.transform.parent = transform;
-            
-            _uploaded = false;
-            
-            _flashingLight.ChangeEffect(_isReleased, _uploaded);
-        }
+        
+        ChooseDirection();
+        
+        _flashingLight.ChangeEffect(_isReleased, _liftingMechanism.IsUploaded);
     }
 
     private void ChooseDirection()
     {
-        if (_resource != null && _uploaded)
-        {
-            _mover.ChangeDirection(_resource.transform);
-            
-            _isMovingToWarehouse = true;
-        }
-        else if (_resource != null && _uploaded == false)
-        {
-            if (_isMovingToWarehouse)
-            {
-                _mover.ChangeSpeed();
-                _mover.ChangeDirection(_stockroomCheackPoint);
-                
-                _isMovingToWarehouse = false;
-            }
-            else
-            {
-                _mover.ChangeDirection(_stockroom);
-            }
-        }
-        else 
-        {
-            if (_isReturningToBase == false)
-            {
-                _mover.ChangeDirection(_waitingPoint);
-                _mover.ChangeSpeed();
-            }
-        }
-    }
-    
-    private void GoBack()
-    {
-        _flashingLight.ChangeEffect(_isReleased, _uploaded);
-        
-        _resource = null;
-        
-        _mover.ChangeMoving();
+        _directionMoving.ChangeDirection(_liftingMechanism.IsUploaded);
     }
 }

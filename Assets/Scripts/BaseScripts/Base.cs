@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Base : MonoBehaviour
@@ -7,18 +6,19 @@ public class Base : MonoBehaviour
     [SerializeField] private Bot[] _bots;
     [SerializeField] private Stockroom[] _stockrooms;
     [SerializeField] private BaseView _baseView;
+    [SerializeField] private Transform _areaScanningBase;
+    [SerializeField] private Storage _storage;
     
     private bool _isDefined;
     private int _indexRemove;
     private int _countResource;
 
-    private List<Resource> _waitingList;
+    public Transform AreaScanningBase => _areaScanningBase;
 
     private void OnEnable()
     {
-        _scanner.Detected += AssignBot;
-        _scanner.Disappeared += DetermineWhoseResource;
-
+        _storage.FoundedNewResource += AssignBot;
+        
         foreach (Stockroom stockroom in _stockrooms)
         {
             stockroom.AcceptedResource += ChangeCountResource;
@@ -32,8 +32,7 @@ public class Base : MonoBehaviour
 
     private void OnDisable()
     {
-        _scanner.Detected -= AssignBot;
-        _scanner.Disappeared -= DetermineWhoseResource;
+        _storage.FoundedNewResource -= AssignBot;
         
         foreach (Stockroom stockroom in _stockrooms)
         {
@@ -48,56 +47,25 @@ public class Base : MonoBehaviour
 
     private void Start()
     {
-        _baseView.SetText(_countResource);
+        _scanner.SetAreaScan(_areaScanningBase);
         
-        _waitingList = new List<Resource>();
+        _baseView.SetText(_countResource);
     }
 
-    private void ChangeCountResource()
+    private void ChangeCountResource(Resource resource)
     {
         _countResource++;
         
         _baseView.SetText(_countResource);
-    }
 
-    private void DetermineWhoseResource(Resource resource)
-    {
-        _isDefined = false;
-        
-        foreach (Resource waitingResource in _waitingList)
-        {
-            if (waitingResource.Index == resource.Index)
-            {
-                _waitingList.Remove(waitingResource);
-
-                _isDefined = true;
-                
-                break;
-            }
-        }
-        
-        if(_isDefined == false)
-        {
-            foreach (Bot bot in _bots)
-            {
-                if (bot.Resource != null)
-                {
-                    if (bot.Resource.Index == resource.Index && bot.Uploaded)
-                    { 
-                        bot.ReturnToBase();
-                    }
-                }
-            }
-        }
+        _storage.RemoveToAssignedResource(resource);
     }
 
     private void ViewWaitingList(Bot bot)
     {
-        if (_waitingList.Count > 0)
+        if (_storage.CountFreeResource > 0)
         {
-            bot.SetTarget(_waitingList[0]);
-
-            _waitingList.Remove(_waitingList[0]);
+            bot.SetTarget(_storage.GetFreeResource());
         }
     }
 
@@ -115,14 +83,9 @@ public class Base : MonoBehaviour
             }
         }
 
-        if (isAppointed == false)
+        if (isAppointed)
         {
-            AddWaitingListResources(resource);
+            _storage.ChangeStatusResource(resource);
         }
-    }
-
-    private void AddWaitingListResources(Resource resource)
-    {
-        _waitingList.Add(resource);
     }
 }

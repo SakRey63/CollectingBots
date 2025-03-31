@@ -3,14 +3,12 @@ using UnityEngine;
 
 public class Stockroom : MonoBehaviour
 {
-    public event Action AcceptedResource;
-    private void OnTriggerEnter(Collider other)
+    public event Action<Resource> AcceptedResource;
+
+    public void TransferResource(Resource resource)
     {
-        if (other.TryGetComponent(out Resource resource))
-        {
-            AcceptedResource?.Invoke();
-            
-            resource.ReturnToPool();
-        }
+        AcceptedResource?.Invoke(resource);
+        
+        resource.ReturnToPool();
     }
 }
