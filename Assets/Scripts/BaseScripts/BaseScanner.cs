@@ -14,20 +14,17 @@ public class BaseScanner : MonoBehaviour
     private Transform _transformScan;
     private Vector3 _boxSize;
 
-    private List<Resource> _allResourcesFound;
+    private Dictionary<int, Resource> _allResourcesFound;
     
-    public event Action<List<Resource>> Detected;
+    public event Action<Dictionary<int, Resource>> Detected;
 
     private void Awake()
     {
         _boxSize = new Vector3(_maxX, _maxY, _maxZ);
+        
+        _allResourcesFound = new Dictionary<int, Resource>();
     }
-
-    private void Start()
-    {
-        _allResourcesFound = new List<Resource>();
-    }
-
+    
     private IEnumerator RepeatedScanningTerritory()
     {
         WaitForSeconds delay = new WaitForSeconds(_delay);
@@ -55,7 +52,7 @@ public class BaseScanner : MonoBehaviour
         {
             if (hitCollider.TryGetComponent(out Resource resource))
             {
-                _allResourcesFound.Add(resource);
+                _allResourcesFound.Add(resource.Index, resource);
             }
         }
 
@@ -64,6 +61,6 @@ public class BaseScanner : MonoBehaviour
             Detected?.Invoke(_allResourcesFound);
         }
         
-        Debug.Log(_allResourcesFound.Count);
+        _allResourcesFound.Clear();
     }
 }

@@ -10,8 +10,6 @@ public class LiftingMechanism : MonoBehaviour
     private bool _isUploaded;
     private Resource _resource;
 
-    public bool IsUploaded => _isUploaded;
-
     public event Action AscentFinished;
     public event Action Unloaded;
 
@@ -39,19 +37,14 @@ public class LiftingMechanism : MonoBehaviour
         }
     }
 
-    public void TransferResource(Stockroom stockroom)
-    {
-        stockroom.TransferResource(_resource);
-    }
-
-    public void ChangeElevator(Resource resource)
+    public void ChangeElevator(Resource resource, bool isUploaded)
     {
         if (_resource == null)
         {
             _resource = resource;
         }
 
-        _isUploaded = !_isUploaded;
+        _isUploaded = isUploaded;
         
         StartCoroutine(WorkingElevator());
     }

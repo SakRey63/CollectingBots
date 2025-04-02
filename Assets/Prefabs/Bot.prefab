@@ -342,6 +342,8 @@ GameObject:
   - component: {fileID: 1481545599305430043}
   - component: {fileID: 546780246847404909}
   - component: {fileID: 1616668835004987267}
+  - component: {fileID: 4550087982778991002}
+  - component: {fileID: 8515440096992710898}
   m_Layer: 0
   m_Name: Bot
   m_TagString: Untagged
@@ -409,9 +411,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _botScanner: {fileID: 7389787991451422214}
-  _directionMoving: {fileID: 1616668835004987267}
+  _targetDirection: {fileID: 1616668835004987267}
   _mover: {fileID: 546780246847404909}
+  _rotator: {fileID: 8515440096992710898}
   _liftingMechanism: {fileID: 8825197665116056563}
+  _resourceTransfer: {fileID: 4550087982778991002}
   _flashingLight: {fileID: 4051675137338437379}
 --- !u!114 &546780246847404909
 MonoBehaviour:
@@ -425,7 +429,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2eaee588951dbce4d852eadc4c5416c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _rotationSpeed: 6
   _moveSpeed: 3
   _delayDriveBack: 1.5
 --- !u!114 &1616668835004987267
@@ -440,11 +443,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec67f0087325fd54daf99ceb70814d92, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mover: {fileID: 546780246847404909}
-  _waitingPoint: {fileID: 0}
-  _waitingCheackPoint: {fileID: 0}
+  _rotator: {fileID: 0}
+  _parking: {fileID: 0}
+  _parkingExit: {fileID: 0}
   _stockroom: {fileID: 0}
-  _stockroomCheackPoint: {fileID: 0}
+  _stockroomExit: {fileID: 0}
+--- !u!114 &4550087982778991002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2671650474860021630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a8a7348531bfde4887599fdce2aeb72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &8515440096992710898
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2671650474860021630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 868cac3f0f2df3d4b9261740e53328c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _rotationSpeed: 8
 --- !u!1 &4169957263571076358
 GameObject:
   m_ObjectHideFlags: 0

@@ -8,23 +8,19 @@ public class FlashingLight : MonoBehaviour
 
     private Effect _effect;
 
-    public void ChangeEffect(bool isReleased, bool uploaded)
+    public void ChangeEffectWaiting()
     {
-        if (isReleased)
-        {
-            InstallEffect(_effectWaiting);
-        }
-        else
-        {
-            if (uploaded == false)
-            {
-                InstallEffect(_effectFollowing);
-            }
-            else
-            {
-                InstallEffect(_effectWork);
-            }
-        }
+        InstallEffect(_effectWaiting);
+    }
+    
+    public void ChangeEffectFollowing()
+    {
+        InstallEffect(_effectFollowing);
+    }
+    
+    public void ChangeEffectWork()
+    {
+        InstallEffect(_effectWork);
     }
 
     private void InstallEffect(Effect effect)

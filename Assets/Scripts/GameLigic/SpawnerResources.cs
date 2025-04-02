@@ -3,7 +3,6 @@ using Random = UnityEngine.Random;
 
 public class SpawnerResources : Spawner<Resource>
 {
-    [SerializeField] private Resource _resource;
     [SerializeField] private float _minPositionX;
     [SerializeField] private float _minPositionZ;
     [SerializeField] private float _maxPositionX;
@@ -15,13 +14,6 @@ public class SpawnerResources : Spawner<Resource>
     private Vector3 _positionSpawn;
     private Quaternion _quaternionSpawn = Quaternion.Euler(Vector3.zero);
     private int _index;
-
-    protected override Resource ChoosePrefab()
-    {
-        Prefab = _resource;
-        
-        return base.ChoosePrefab();
-    }
 
     protected override void SetAction(Resource resource)
     {

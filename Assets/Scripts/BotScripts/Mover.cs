@@ -4,12 +4,8 @@ using UnityEngine;
 
 public class Mover : MonoBehaviour
 {
-    [SerializeField] private float _rotationSpeed;
     [SerializeField] private float _moveSpeed;
     [SerializeField] private float _delayDriveBack;
-    
-    private Vector3 _lockAtTarget;
-    private Vector3 _direction;
     
     private bool _isMovingForward;
     private bool _isMovingBack;
@@ -19,7 +15,6 @@ public class Mover : MonoBehaviour
     private void Update()
     {
         Move();
-        RotationBot();
     }
 
     private IEnumerator DriveBack()
@@ -31,35 +26,18 @@ public class Mover : MonoBehaviour
         yield return delay;
 
         _isMovingBack = false;
-
-        _isMovingForward = true; 
         
         DeliveredResource?.Invoke();
     }
-
-    public void ChangeDirection(Vector3 target)
-    {
-        _lockAtTarget = target;
-    }
     
-    public void ChangeSpeed(bool isMoving)
+    public void ChangeMove(bool isMoving)
     {
         _isMovingForward = isMoving;
     }
 
-    public void ChangeMoving()
+    public void SetBotMoveBack()
     {
         StartCoroutine(DriveBack());
-    }
-    
-    private void RotationBot()
-    {
-        if (_lockAtTarget != null && _isMovingForward)
-        {
-            _direction = _lockAtTarget - transform.position;
-            
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(_direction), _rotationSpeed * Time.deltaTime);
-        }
     }
     
     private void Move()

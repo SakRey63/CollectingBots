@@ -3,8 +3,6 @@ using UnityEngine;
 
 public class BotScanner : MonoBehaviour
 {
-    private Resource _resource;
-    
     public event Action AchievedCheckPoint;
     public event Action<Resource> AchievedResource;
     public event Action AchievedWaitingPoint;
@@ -12,7 +10,7 @@ public class BotScanner : MonoBehaviour
    
     private void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent<CheckPointWaiting>(out _))
+        if (other.TryGetComponent<ParkingExit>(out _))
         {
             AchievedCheckPoint?.Invoke();
         }
@@ -20,16 +18,15 @@ public class BotScanner : MonoBehaviour
         {
             AchievedResource?.Invoke(resource);
         }
-        else if(other.TryGetComponent<CheckPointStockroom>(out _))
+        else if(other.TryGetComponent<StockroomExit>(out _))
         {
             AchievedCheckPoint?.Invoke();
         }
         else if (other.TryGetComponent(out Stockroom stockroom))
         {
              AchievedStockroom?.Invoke(stockroom);
-            
         }
-        else if (other.TryGetComponent<WaitingPoint>(out _))
+        else if (other.TryGetComponent<Parking>(out _))
         {
             AchievedWaitingPoint?.Invoke();
         }

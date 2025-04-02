@@ -1,55 +1,45 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Base : MonoBehaviour
 {
     [SerializeField] private BaseScanner _scanner;
-    [SerializeField] private Bot[] _bots;
-    [SerializeField] private Stockroom[] _stockrooms;
+    [SerializeField] private Garage _garage;
+    [SerializeField] private Stockroom _stockroom;
     [SerializeField] private BaseView _baseView;
     [SerializeField] private Transform _areaScanningBase;
-    [SerializeField] private Storage _storage;
+    [SerializeField] private Database _database;
     
-    private bool _isDefined;
-    private int _indexRemove;
     private int _countResource;
-
+    
     public Transform AreaScanningBase => _areaScanningBase;
 
     private void OnEnable()
     {
-        _storage.FoundedNewResource += AssignBot;
-        
-        foreach (Stockroom stockroom in _stockrooms)
-        {
-            stockroom.AcceptedResource += ChangeCountResource;
-        }
-        
-        foreach (Bot bot in _bots)
-        {
-            bot.Released += ViewWaitingList;
-        }
+        _scanner.Detected += SetAllResource;
+        _database.FoundedNewResource += AssignBot;
+        _garage.FreeBot += AssignBot;
+        _stockroom.AcceptedResource += ChangeCountResource;
     }
 
     private void OnDisable()
     {
-        _storage.FoundedNewResource -= AssignBot;
-        
-        foreach (Stockroom stockroom in _stockrooms)
-        {
-            stockroom.AcceptedResource -= ChangeCountResource;
-        }
-        
-        foreach (Bot bot in _bots)
-        {
-            bot.Released -= ViewWaitingList;
-        }
+        _scanner.Detected -= SetAllResource;
+        _database.FoundedNewResource -= AssignBot;
+        _garage.FreeBot -= AssignBot;
+        _stockroom.AcceptedResource -= ChangeCountResource;
     }
 
-    private void Start()
+    private void Awake()
     {
         _scanner.SetAreaScan(_areaScanningBase);
         
         _baseView.SetText(_countResource);
+    }
+
+    private void SetAllResource(Dictionary<int, Resource> resources)
+    {
+        _database.DetermineStatusResource(resources);
     }
 
     private void ChangeCountResource(Resource resource)
@@ -58,34 +48,16 @@ public class Base : MonoBehaviour
         
         _baseView.SetText(_countResource);
 
-        _storage.RemoveToAssignedResource(resource);
+        _database.RemoveToAssignedResource(resource.Index);
     }
 
-    private void ViewWaitingList(Bot bot)
+    private void AssignBot()
     {
-        if (_storage.CountFreeResource > 0)
+        if (_database.CountFreeResource > 0 && _garage.CountFreeBots > 0)
         {
-            bot.SetTarget(_storage.GetFreeResource());
-        }
-    }
-
-    private void AssignBot(Resource resource)
-    {
-        bool isAppointed = false;
-        
-        foreach (Bot bot in _bots)
-        {
-            if (bot.IsReleased && isAppointed == false)
-            {
-                bot.SetTarget(resource);
-
-                isAppointed = true;
-            }
-        }
-
-        if (isAppointed)
-        {
-            _storage.ChangeStatusResource(resource);
+            Bot bot = _garage.GetBot();
+                
+            bot.SetTarget(_database.GetFreeResource());
         }
     }
 }

@@ -4,13 +4,17 @@ using UnityEngine;
 public class Bot : MonoBehaviour
 {
     [SerializeField] private BotScanner _botScanner;
-    [SerializeField] private DirectionMovingBot _directionMoving;
+    [SerializeField] private TargetDirection _targetDirection;
     [SerializeField] private Mover _mover;
+    [SerializeField] private Rotator _rotator;
     [SerializeField] private LiftingMechanism _liftingMechanism;
+    [SerializeField] private ResourceTransfer _resourceTransfer;
     [SerializeField] private FlashingLight _flashingLight;
     
     private bool _isReleased = true;
+    private bool _isUploaded;
     private bool _isMoving;
+    private bool _isRotating;
     private Resource _resource;
     
     public bool IsReleased => _isReleased;
@@ -19,27 +23,29 @@ public class Bot : MonoBehaviour
 
     private void OnEnable()
     {
-        _botScanner.AchievedCheckPoint += ChooseDirection;
+        _botScanner.AchievedCheckPoint += SetDirection;
         _botScanner.AchievedResource += RaisingResource;
         _botScanner.AchievedStockroom += UnloadingResource;
         _botScanner.AchievedWaitingPoint += ChangeStatus;
         _liftingMechanism.AscentFinished += DeliveringResource;
         _liftingMechanism.Unloaded += DriveBack;
+        _mover.DeliveredResource += ReturnToParking;
     }
 
     private void OnDisable()
     {
-        _botScanner.AchievedCheckPoint -= ChooseDirection;
+        _botScanner.AchievedCheckPoint -= SetDirection;
         _botScanner.AchievedResource -= RaisingResource;
         _botScanner.AchievedStockroom -= UnloadingResource;
         _botScanner.AchievedWaitingPoint -= ChangeStatus;
         _liftingMechanism.AscentFinished -= DeliveringResource;
         _liftingMechanism.Unloaded -= DriveBack;
+        _mover.DeliveredResource -= ReturnToParking;
     }
 
     private void Start()
     {
-        _flashingLight.ChangeEffect(_isReleased, _liftingMechanism.IsUploaded);
+        _flashingLight.ChangeEffectWaiting();
     }
 
     public void SetTarget(Resource resource)
@@ -48,77 +54,108 @@ public class Bot : MonoBehaviour
         
         _isReleased = false;
 
-        _isMoving = true;
+        _targetDirection.ChangeDirectionParkingExit();
         
-        _directionMoving.SetDirectionTarget(_resource.transform, _liftingMechanism.IsUploaded);
+        ChangeMovementRotation();
         
-        _mover.ChangeSpeed(_isMoving);
-        
-        _flashingLight.ChangeEffect(_isReleased, _liftingMechanism.IsUploaded);
+        _flashingLight.ChangeEffectFollowing();
     }
 
     private void ChangeStatus()
     {
         if (_isReleased == false)
         {
-            _resource = null;
-            
             _isReleased = true;
 
-            _isMoving = false;
-            
-            _mover.ChangeSpeed(_isMoving);
+            ChangeMovementRotation();
                     
             Released?.Invoke(this);
             
-            _flashingLight.ChangeEffect(_isReleased, _liftingMechanism.IsUploaded);
+            _flashingLight.ChangeEffectWaiting();
+        }
+    }
+
+    private void ChangeMovementRotation()
+    {
+        if (_isRotating && _isMoving)
+        {
+            _isRotating = false;
+            _isMoving = false;
+            
+            _rotator.ChangeRotation(_isRotating);
+            _mover.ChangeMove(_isMoving);
+        }
+        else
+        {
+            _isRotating = true;
+            _isMoving = true;
+            
+            _rotator.ChangeRotation(_isRotating);
+            _mover.ChangeMove(_isMoving);
+        }
+    }
+
+    private void ReturnToParking()
+    {
+        _targetDirection.ChangeDirectionParking();
+
+        ChangeMovementRotation();
+    }
+
+    private void SetDirection()
+    {
+        if (_isUploaded == false)
+        {
+            _targetDirection.ChangeDirectionResourcePosition(_resource.transform.position);
+        }
+        else
+        {
+            _targetDirection.ChangeDirectionStockroom();
         }
     }
 
     private void DriveBack()
     {
-        _directionMoving.GoBack();
+        _isUploaded = false;
+        
+        _mover.SetBotMoveBack();
+        
+        _flashingLight.ChangeEffectFollowing();
     }
 
     private void UnloadingResource(Stockroom stockroom)
     {
-        _isMoving = false;
+        bool isUploaded = false;
         
-        _mover.ChangeSpeed(_isMoving);
+        ChangeMovementRotation();
         
-        _liftingMechanism.ChangeElevator(_resource);
-        _liftingMechanism.TransferResource(stockroom);
+        _liftingMechanism.ChangeElevator(_resource, isUploaded);
         
-        ChooseDirection();
-        
-        _flashingLight.ChangeEffect(_isReleased, _liftingMechanism.IsUploaded);
+        _resourceTransfer.TransferResource(stockroom, _resource);
+
+        _resource = null;
     }
 
     private void DeliveringResource()
     {
-        _isMoving = true;
+        _isUploaded = true;
         
-        _mover.ChangeSpeed(_isMoving);
+        _targetDirection.ChangeDirectionStockroomExit();
+        
+        ChangeMovementRotation();
     }
 
     private void RaisingResource(Resource resource)
     {
-        _isMoving = false;
-        
-        _mover.ChangeSpeed(_isMoving);
-
-        if (_resource.Index == resource.Index)
+        if (_resource != null && _resource.Index == resource.Index)
         {
-            _liftingMechanism.ChangeElevator(resource);
+            bool isUploaded = true;
+            
+            ChangeMovementRotation();
+            
+            _liftingMechanism.ChangeElevator(resource, isUploaded);
+            
+            _flashingLight.ChangeEffectWork();
         }
-        
-        ChooseDirection();
-        
-        _flashingLight.ChangeEffect(_isReleased, _liftingMechanism.IsUploaded);
-    }
-
-    private void ChooseDirection()
-    {
-        _directionMoving.ChangeDirection(_liftingMechanism.IsUploaded);
     }
 }

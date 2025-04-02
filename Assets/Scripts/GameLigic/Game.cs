@@ -11,14 +11,6 @@ public class Game : MonoBehaviour
     {
         StartCoroutine(RepeatResource());
     }
-
-    private void SetAreaSpawnResources()
-    {
-        foreach (Base playerBase in _bases)
-        {
-            _spawnerResources.SetAreaResource(playerBase.AreaScanningBase);
-        }
-    }
     
     private IEnumerator RepeatResource()
     {
@@ -29,6 +21,14 @@ public class Game : MonoBehaviour
             SetAreaSpawnResources();
 
             yield return delay;
+        }
+    }
+
+    private void SetAreaSpawnResources()
+    {
+        foreach (Base playerBase in _bases)
+        {
+            _spawnerResources.SetAreaResource(playerBase.AreaScanningBase);
         }
     }
 }
