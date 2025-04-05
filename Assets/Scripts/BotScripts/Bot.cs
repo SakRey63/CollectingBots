@@ -23,7 +23,7 @@ public class Bot : MonoBehaviour
 
     private void OnEnable()
     {
-        _botScanner.AchievedCheckPoint += SetDirection;
+        _botScanner.AchievedCheckPoint += ChooseDirection;
         _botScanner.AchievedResource += RaisingResource;
         _botScanner.AchievedStockroom += UnloadingResource;
         _botScanner.AchievedWaitingPoint += ChangeStatus;
@@ -34,7 +34,7 @@ public class Bot : MonoBehaviour
 
     private void OnDisable()
     {
-        _botScanner.AchievedCheckPoint -= SetDirection;
+        _botScanner.AchievedCheckPoint -= ChooseDirection;
         _botScanner.AchievedResource -= RaisingResource;
         _botScanner.AchievedStockroom -= UnloadingResource;
         _botScanner.AchievedWaitingPoint -= ChangeStatus;
@@ -102,7 +102,7 @@ public class Bot : MonoBehaviour
         ChangeMovementRotation();
     }
 
-    private void SetDirection()
+    private void ChooseDirection()
     {
         if (_isUploaded == false)
         {

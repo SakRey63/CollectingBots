@@ -31,7 +31,7 @@ public class BaseScanner : MonoBehaviour
 
         while (enabled)
         {
-            ScanningTerritory();
+            ScanTerritory();
             
             yield return delay;
         }
@@ -44,7 +44,7 @@ public class BaseScanner : MonoBehaviour
         StartCoroutine(RepeatedScanningTerritory());
     }
 
-    private void ScanningTerritory()
+    private void ScanTerritory()
     {
         Collider[] hitColliders = Physics.OverlapBox(_transformScan.position, _boxSize / _halfFromCenter, Quaternion.identity);
 

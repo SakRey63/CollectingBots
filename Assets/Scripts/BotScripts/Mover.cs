@@ -7,10 +7,16 @@ public class Mover : MonoBehaviour
     [SerializeField] private float _moveSpeed;
     [SerializeField] private float _delayDriveBack;
     
-    private bool _isMovingForward;
-    private bool _isMovingBack;
-
+    private bool _isMoving;
+    private Vector3 _directionMovementForward = Vector3.forward;
+    private Vector3 _directionMovementBack = -Vector3.forward;
+    private Vector3 _directionMovement;
     public event Action DeliveredResource;
+
+    private void Awake()
+    {
+        _directionMovement = _directionMovementForward;
+    }
 
     private void Update()
     {
@@ -21,18 +27,22 @@ public class Mover : MonoBehaviour
     {
         WaitForSeconds delay = new WaitForSeconds(_delayDriveBack);
 
-        _isMovingBack = true;
+        _isMoving = true;
+
+        _directionMovement = _directionMovementBack;
 
         yield return delay;
 
-        _isMovingBack = false;
+        _isMoving = false;
+
+        _directionMovement = _directionMovementForward;
         
         DeliveredResource?.Invoke();
     }
     
     public void ChangeMove(bool isMoving)
     {
-        _isMovingForward = isMoving;
+        _isMoving = isMoving;
     }
 
     public void SetBotMoveBack()
@@ -42,14 +52,9 @@ public class Mover : MonoBehaviour
     
     private void Move()
     {
-        if (_isMovingForward)
+        if (_isMoving)
         {
-            transform.Translate(Vector3.forward * _moveSpeed * Time.deltaTime, Space.Self);
-        }
-
-        if (_isMovingBack)
-        {
-            transform.Translate(-Vector3.forward * _moveSpeed * Time.deltaTime, Space.Self);
+            transform.Translate(_directionMovement * _moveSpeed * Time.deltaTime, Space.Self);
         }
     }
 }
